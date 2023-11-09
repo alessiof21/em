@@ -3,12 +3,12 @@
         <div class="grid__form">
             <div class="form__flex-container">
                 <h5>Добавление нового пользователя</h5>
-                <form class="userForm" action="/" method="post">
-                    <label for="firstName">Имя</label> <br/>
-                    <input id="firstName" type="text" name="firstName" /> <br/>
-                    <label for="nickName">Ник</label> <br/>
-                    <input id="nickName" type="text" name="nickName" /> <br/> <br/>
-                    <button type="button" class="btn btn-success" data-bs-toggle="button" aria-pressed="false" autocomplete="off">Создать</button>
+                <form action="/" method="post">
+                    <label for="firstName">Имя</label> <br>
+                    <input id="firstName" type="text" name="firstName" /> <br>
+                    <label for="nickName">Ник</label> <br>
+                    <input id="nickName" type="text" name="nickName" /> <br> <br>
+                    <input type="submit" value="Создать" class="btn btn-success" />
                 </form>
             </div>
         </div>
@@ -21,11 +21,11 @@
 
         <div class="grid__list">
             <div v-if="isVisible" v-for="user in users" class="list__flex-container">
-                <div class="user" :id="user.id" :key="user.id">
-                    <div>id: {{ user.id }}</div>
-                    <div>Имя: <span :id="`fn${user.id}`" contenteditable="true" @input="editUser(user.id)"> {{ user.firstName }}</span></div>
-                    <div>Ник: <span :id="`nn${user.id}`" contenteditable="true" @input="editUser(user.id)"> {{ user.nickName }}</span></div>
-                    <button :id="`btn${user.id}`" disabled @click="saveChanges(user.id)" type="button" class="btn btn-success" data-bs-toggle="button" aria-pressed="false" autocomplete="off">Сохранить</button>
+                <div class="user" :id="user.user_id" :key="user.user_id">
+                    <div>id: {{ user.user_id }}</div>
+                    <div>Имя: <span :id="`fn${user.user_id}`" contenteditable="true" @input="editUser(user.user_id)"> {{ user.firstName }}</span></div>
+                    <div>Ник: <span :id="`nn${user.user_id}`" contenteditable="true" @input="editUser(user.user_id)"> {{ user.nickName }}</span></div>
+                    <button :id="`btn${user.user_id}`" disabled @click="saveChanges(user.user_id)" type="button" class="btn btn-success" data-bs-toggle="button" aria-pressed="false" autocomplete="off">Сохранить</button>
                 </div>
             </div>
         </div>
@@ -41,29 +41,55 @@
             return {
                 isVisible: false,
                 isEdit: false,
-                users: []
+                users: [],
+                cache: {}
             }
         },
         methods: {
             showList() {
-                axios.get('/getUsers').then(response => {
-                    this.users = response.data.slice(0);
-                    this.isVisible = true;
-                });
+                if (!this.isVisible) {
+                    axios.get('/getUsers')
+                        .then(response => {
+                            this.users = response.data.slice(0);
+                            this.isVisible = true;
+                        })
+                        .catch(e => console.error(e.message));
+                }
             },
             editUser(id) {
                 const button = document.getElementById(`btn${id}`);
                 button.disabled = false;
+                if (this.cache[id] === undefined) {
+                    this.cache[id] = {
+                        firstName: document.getElementById(`fn${id}`).innerText,
+                        nickName: document.getElementById(`nn${id}`).innerText,
+                    }
+                }
             },
             saveChanges(id) {
                 const button = document.getElementById(`btn${id}`);
                 button.disabled = true;
-                const editUser = {
-                    id: id,
-                    firstName: document.getElementById(`fn${id}`).innerText,
-                    nickName: document.getElementById(`nn${id}`).innerText
-                };
-                axios.post('/editUser');
+                let firstName = document.getElementById(`fn${id}`).innerText;
+                let nickName = document.getElementById(`nn${id}`).innerText;
+                if (firstName === '' || nickName === '') { 
+                    // Если одно из полей пустое, то вернуть кэш для пустого поля и вернуть значение в инпут
+                    firstName ||= this.cache[id].firstName;
+                    nickName ||= this.cache[id].nickName;
+                    document.getElementById(`fn${id}`).innerText = firstName;
+                    document.getElementById(`nn${id}`).innerText = nickName;
+                }
+                if (this.cache[id].firstName !== firstName || this.cache[id].nickName !== nickName) {
+                    // Отправляем данные только если они, действительно, обновились
+                    const editUser = {
+                        user_id: id,
+                        firstName: firstName,
+                        nickName: nickName
+                    };
+                    axios.post('/editUsers', JSON.stringify(editUser))
+                        .then(result => console.log(result))
+                        .catch(e => console.error(e.message))
+                }
+                delete this.cache[id]; // Очищаем кэш
             }
         }
     }
@@ -73,7 +99,7 @@
     .main__grid {
         padding-top: 2vh;
         width: 100%;
-        height: 80vh;
+        height: 90vh;
         display: grid;
         grid-template-columns: 30% 70%;
         grid-template-rows: 70% 30%;
@@ -93,6 +119,7 @@
         margin: 0 2vw;
         grid-column: 2/3;
         grid-row: 1/3;
+        overflow-y: scroll;
     }
     .form__flex-container {
         border: 2px solid teal;

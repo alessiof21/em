@@ -1,19 +1,10 @@
 <template>
-  <my-nav />
+  <my-nav @openHistory="openHistory"/>
   <router-view />
 </template>
 
 <script> 
-  import axios from 'axios';
-  export default {
-    methods: {
-      func() {
-        axios.get('/getName').then((response) => {
-          console.log(response.data);
-        })
-      }
-    }
-  }
+  export default {}
 </script>
 
 <style>

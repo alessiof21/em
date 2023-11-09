@@ -11,7 +11,7 @@
 
 <script>
     export default {
-        name: 'my-nav'
+        name: 'my-nav',
     }
 </script>
 

@@ -1,5 +1,6 @@
 const sql = require('./base.js');
 
+// Создание таблиц, если это необходимо
 async function init() {
     try {
         // Создаем таблицу users - хранящую id пользователей в колонке user для связи с другими таблицами
@@ -31,6 +32,7 @@ async function init() {
       }
 }
 
+// Получение списка пользователей
 async function getUsers() {
     const users = await sql`
         SELECT user_id, user_info FROM users_info;
@@ -38,13 +40,17 @@ async function getUsers() {
     return users;
 }
 
+// Получение списка истории событий пользователей
 async function getHistoryUsers() {
     const users = await sql`
-        SELECT user_id, user_history, event_date FROM users_history;
-    `
+        SELECT user_id, user_identificator, user_history, event_date 
+        FROM users_history
+        INNER JOIN users USING(user_id);
+    `;
     return users;
 }
 
+// Добавление пользователя в базу данных
 async function addUser(json) {
     const id = `${Date.now()}`;
     await sql`
@@ -66,6 +72,7 @@ async function addUser(json) {
 
 }
 
+// Редактирование строки пользователя в базе данных
 async function editUser(id, json) {
     await sql`
         UPDATE users_info

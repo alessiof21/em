@@ -1,48 +1,43 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const path = require('path');
 
 const { init, getUsers, getHistoryUsers, addUser, editUser } = require('./src/db/index.js')
 
-init();
-
 const app = express();
-const port = process.env.PORT || 5000;
-
-const urlencodedParser = bodyParser.urlencoded({
-  extended: false,
-});
-
-
-
+const port = process.env.PORT || 8081;
 
 app.use(express.static('dist'));
 
-app.get('/', function(req, res) {
-  try {
-    res.statusCode = 200;
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  } catch(e) {
-    res.statusCode = 500;
-    console.error(e.message);
-  }
-  res.end();
+// Взаимодействия с основной страницей
+app.route('/')
+  .get(function(req, res) { // Открытие приложения
+    try {
+      res.statusCode = 200;
+      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    } catch(e) {
+      res.statusCode = 500;
+      console.error(e.message);
+    }
+    res.end();
+  })
+
+  .post(express.json(), function(req, res) { // Отправка формы
+    try {
+      res.statusCode = 200;
+      if (!req.body.firstName || !req.body.nickName) return; // Если форма не полная, то не вносить такого "пользователя в базу"
+      const json = JSON.stringify({firstName: req.body.firstName, nickName: req.body.nickName});
+      addUser(json);
+    } catch(e) {
+      res.status = 500;
+      console.error(e.message);
+    }
+  })
+
+app.get('/history', function(req, res) { // Если пользователь хочет перейти на вкладку история - отправить его на основную страницу
+  res.redirect('/');
 });
 
-app.post('/', urlencodedParser, function(req, res) {
-  try {
-    res.statusCode = 200;
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    if (!req.body.firstName || !req.body.nickName) return; // Если форма не полная, то не вносить такого "пользователя в базу"
-    const json = JSON.stringify({firstName: req.body.firstName, nickName: req.body.nickName});
-    addUser(json);
-  } catch(e) {
-    res.status = 500;
-    console.error(e.message);
-  }
-
-});
-
+// Получение списка пользователей из базы данных
 app.get('/getUsers', async function(req, res) {
   try {
     res.statusCode = 200;
@@ -60,11 +55,23 @@ app.get('/getUsers', async function(req, res) {
   }
 });
 
-
-app.post('/editUsers', urlencodedParser, function(req, res) {
+// Получение списка истории событий для пользователей
+app.get('/getHistoryUsers', async function(req, res) {
   try {
     res.statusCode = 200;
-    const obj = JSON.parse(Object.keys(req.body)[0]);
+    const list = (await getHistoryUsers()).slice(0);
+    res.end(JSON.stringify(list));
+  } catch(e) {
+    res.statusCode = 500;
+    console.error(e.message);
+  }
+});
+
+// Редактирование пользователя
+app.post('/editUsers', express.json(), function(req, res) {
+  try {
+    res.statusCode = 200;
+    const obj = req.body;
     const id = obj.user_id;
     delete obj.user_id;
     editUser(id, JSON.stringify(obj));
@@ -76,6 +83,9 @@ app.post('/editUsers', urlencodedParser, function(req, res) {
 });
 
 
-
-app.listen(port);
-console.log('Server started at http://localhost:' + port);
+// Запуск сервера
+app.listen(port, function(err) {
+  if (err) return console.error('Error in server setup');
+  init();
+  console.log('Server started at http://localhost:' + port);
+});

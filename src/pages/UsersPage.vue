@@ -65,8 +65,10 @@
                     .then(() => {
                         //Если у нас произошло добавление пользователя и мы это передали в базу данных, очищаем кэш
                         this.$store.commit('cached', []);
-                        this.isVisible = false;
-                        this.showList();
+                        if (this.isVisible === true) { // Если список пользователей открыт, то обновляем его
+                            this.isVisible = false;
+                            this.showList();
+                        }
                     })
                     .catch(e => console.error(e.message));
             },
@@ -111,7 +113,7 @@
                     };
                     axios.post('/editUsers', editUser)
                         .then(() => {
-                            //Если у нас произошло добавление пользователя и мы это передали в базу данных, очищаем кэш
+                            //Если у нас произошло изменение пользователя и мы это передали в базу данных, очищаем кэш
                             this.$store.commit('cached', []);
                         })
                         .catch(e => console.error(e.message))

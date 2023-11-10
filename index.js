@@ -31,6 +31,7 @@ app.route('/')
       res.status = 500;
       console.error(e.message);
     }
+    res.end();
   })
 
 app.get('/history', function(req, res) { // Если пользователь хочет перейти на вкладку история - отправить его на основную страницу
@@ -53,6 +54,7 @@ app.get('/getUsers', async function(req, res) {
     res.statusCode = 500;
     console.error(e.message);
   }
+  res.end();
 });
 
 // Получение списка истории событий для пользователей
@@ -64,6 +66,7 @@ app.get('/getHistoryUsers', async function(req, res) {
   } catch(e) {
     res.statusCode = 500;
     console.error(e.message);
+    res.end();
   }
 });
 

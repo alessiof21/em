@@ -1,11 +1,17 @@
 import { createStore } from 'vuex'
 
 export default createStore({
-  state: {
+  state: function() {
+    return {
+      cache: []
+    }
   },
   getters: {
   },
   mutations: {
+    cached(state, list) {
+      state.cache = list.slice(0);
+    }
   },
   actions: {
   },

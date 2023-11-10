@@ -1,15 +1,11 @@
 <template>
   <my-nav />
-  <router-view :changeList="changeList" @changeTrue="changeList = true" @changeFalse="changeList = false"/>
+  <router-view />
 </template>
 
 <script> 
   export default {
-    data() {
-      return {
-        changeList: false
-      }
-    }
+
   }
 </script>
 

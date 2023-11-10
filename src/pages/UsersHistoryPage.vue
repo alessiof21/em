@@ -63,35 +63,26 @@
                 answer: "Нет пользователей с таким id"
             }
         },
-        props: {
-            changeList: {
-                type: Boolean,
-                default: false,
-            }
-        },
         methods: {
             async showList() {
-                if (this.changeList == true || this.cache.length == 0) { // Если кэш пуст или произошли изменения в списке
+                if (this.$store.state.cache.length === 0) { // Если кэш пуст (то есть не делали еще запрос к бд или обновили бд)
                     await axios.get('/getHistoryUsers') // Запрашиваем из базы данных список истории событий пользователей
                         .then((response) => {
-                            this.search = true;
-                            this.pages = 0;
-                            this.list = {};
-                            this.cache = response.data.slice(0);
-                            this.$emit('changeFalse');
+                            this.$store.commit('cached', response.data);
                         })
                         .catch(e => console.error(e.message));
                 }
+                this.search = true;
                 this.pageNumber = 0;
                 this.answer = 'История всех пользователей';
-                this.paginate(this.cache); // Делаем пагинацию
+                this.paginate(this.$store.state.cache); // Делаем пагинацию
             },
             filter() {
-                if (this.inputValue == 0) return; // Если не введен id для фильтрования
+                if (this.inputValue == 0 || this.search == false) return; // Если не введен id для фильтрования или еще не было поиска
                 const filterList = [];
-                for (let i = 0; i < this.cache.length; i++) {
-                    if (this.cache[i].user_id == this.inputValue) {
-                        filterList.push(this.cache[i]);
+                for (let i = 0; i < this.$store.state.cache.length; i++) {
+                    if (this.$store.state.cache[i].user_id == this.inputValue) {
+                        filterList.push(this.$store.state.cache[i]);
                     }
                 }
                 this.answer = filterList.length == 0 ? `Пользователь с id ${this.inputValue} не найден` : `История пользователя с id ${this.inputValue}`;

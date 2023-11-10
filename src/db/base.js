@@ -5,7 +5,8 @@ const connect = {
     host: 'localhost', 
     port: 5432, 
     user: 'postgres', 
-    database: 'mydb'
+    database: 'mydb',
+    //password: 'yourPassword'
 }
 
 const sql = postgres(connect);

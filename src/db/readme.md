@@ -11,6 +11,7 @@ users_info - связь с таблицей users через ключ user_id , 
 users_history - связь с таблицей users через ключ user_id, хранит информацию о событиях пользователя
 
 Схема: 
+
 users —> users_info
 
 users —> users_history
